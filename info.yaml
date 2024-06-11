@@ -1,10 +1,10 @@
 
 # Tiny Tapeout project information
 project:
-  title:        ""      # Project title
-  author:       ""      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
+  title:        "Tiny Tapeout logo"      # Project title
+  author:       "Renaldas Zioma"
+  discord:      "rzioma"      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
+  description:  "Large 272x272 pixels Tiny Tapeout logo"
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     25175000       # Clock frequency in Hz (or 0 if not applicable)
 
