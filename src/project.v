@@ -6,7 +6,7 @@
 
 `default_nettype none
 
-parameter LOGO_SIZE = 128;  // Size of the logo in pixels
+parameter LOGO_SIZE = 272;  // Size of the logo in pixels
 parameter DISPLAY_WIDTH = 640;  // VGA display width
 parameter DISPLAY_HEIGHT = 480;  // VGA display height
 
@@ -81,7 +81,7 @@ module tt_um_rejunity_vga_logo (
         addr <= 0;
         counter <= 0;
         pixel_value <= 0;
-      end else if (pix_x < 272 && pix_y < 267) begin
+      end else if (pix_x < LOGO_SIZE && pix_y < LOGO_SIZE) begin
         if (counter >= len) begin
           addr <= addr + 1;
           counter <= 0;
