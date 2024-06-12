@@ -109,20 +109,20 @@ module tt_um_rejunity_vga_logo (
   wire [9:0] x = pix_x;
   wire [9:0] y = pix_y;
   
-  // wire [16:0] r = (x - 320) * (x - 320) + (y - 240) * (y - 240);
+  wire [16:0] r = (x - 320) * (x - 320) + (y - 240) * (y - 240);
 
-  reg [16:0] yy, r;
-  always @(posedge clk) begin
-    if (~rst_n) begin
-      yy <= 0;
-      r <= 0;
-    end else begin
-      if (x==0)
-        yy <= (y - 10'd240) * (y - 10'd240);
-      else
-        r <= (x - 10'd320) * (x - 10'd320) + yy;
-    end
-  end
+  // reg [16:0] yy, r;
+  // always @(posedge clk) begin
+  //   if (~rst_n) begin
+  //     yy <= 0;
+  //     r <= 0;
+  //   end else begin
+  //     if (x==0)
+  //       yy <= (y - 10'd240) * (y - 10'd240);
+  //     else
+  //       r <= (x - 10'd320) * (x - 10'd320) + yy;
+  //   end
+  // end
 
   wire ring = r < 240*240 & r > (240-36)*(240-36);
 
@@ -141,7 +141,8 @@ module tt_um_rejunity_vga_logo (
   wire cut1 = ~(x >= 80+256+70 & x < 80+256+70+22 & y >= 222+64 & y < 480);
 
   
-  assign {R, G, B } = (video_active&((ring&cut0&cut1)|hat0|leg0|hat1|leg1)) ? 6'b11_11_00 : 6'b00_00_00;
+  wire logo = (ring&cut0&cut1)|hat0|leg0|hat1|leg1;
+  assign {R, G, B } = (video_active & logo) ? 6'b11_11_00 : 6'b00_00_00;
 
 `endif
 
