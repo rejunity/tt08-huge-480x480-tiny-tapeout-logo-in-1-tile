@@ -8,11 +8,13 @@
 `default_nettype none
 
 // parameter LOGO_SIZE = 272;  // Size of the logo in pixels
-parameter LOGO_SIZE = 266;  // Size of the logo in pixels
+// parameter LOGO_SIZE = 266;  // Size of the logo in pixels
+parameter LOGO_SIZE = 480;  // Size of the logo in pixels
 parameter DISPLAY_WIDTH = 640;  // VGA display width
 parameter DISPLAY_HEIGHT = 480;  // VGA display height
 
-// `define ROM1 1
+// `define ROM 1
+// `define RLE 1
 
 module tt_um_rejunity_vga_logo (
     input  wire [7:0] ui_in,    // Dedicated inputs
@@ -56,7 +58,8 @@ module tt_um_rejunity_vga_logo (
       .vpos(pix_y)
   );
 
-`ifdef ROM1
+`ifdef ROM
+
   wire pixel_value;
   bitmap_rom rom1 (
       .x(pix_x[6:0]),
@@ -66,7 +69,8 @@ module tt_um_rejunity_vga_logo (
 
   assign {R, G, B } = (video_active&pixel_value) ? 6'b11_11_00 : 6'b00_00_00;
 
-`else
+`elsif RLE
+
   reg [11:0] addr;
   reg [7:0] len;
   bitmap_rom_rle rom2 (
@@ -97,7 +101,33 @@ module tt_um_rejunity_vga_logo (
         end
       end
     end
-  end  
+  end
+
+`else
+
+  // assume LOGO_SIZE = 480
+  wire [9:0] x = pix_x;
+  wire [9:0] y = pix_y;
+  wire [16:0] r = (x - 320) * (x - 320) + (y - 240) * (y - 240);
+  wire ring = r < 240*240 & r > (240-36)*(240-36);
+
+  // xy: 46x100 wh:240x64
+  wire hat0 = x >= 80+46  & x < 80+46+240  & y >= 100 & y < 100+64;
+  // xy:144x100 wh:70x228
+  wire leg0 = x >= 80+144 & x < 80+144+70  & y >= 100 & y < 100+228;
+  // xy:144x222 wh:254x64
+  wire hat1 = x >= 80+144 & x < 80+144+254 & y >= 222 & y < 222+64;
+  // xy:256x222 wh:70x240
+  wire leg1 = x >= 80+256 & x < 80+256+70  & y >= 222 & y < 222+240;
+
+  // xy:(256+70)x(222+64) wh:20x...
+  wire cut0 = ~(x >= 80   & x < 80+144     & y >= 100+64 & y < 100+60+22);
+  // xy:(256+70)x(222+64) wh:20x...
+  wire cut1 = ~(x >= 80+256+70 & x < 80+256+70+22 & y >= 222+64 & y < 480);
+
+  
+  assign {R, G, B } = (video_active&((ring&cut0&cut1)|hat0|leg0|hat1|leg1)) ? 6'b11_11_00 : 6'b00_00_00;
+
 `endif
 
 endmodule
