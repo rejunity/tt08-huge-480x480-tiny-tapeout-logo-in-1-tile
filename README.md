@@ -5,7 +5,7 @@
 Generates VGA signal of a large Tiny Tapeout logo using procedural approach. Fits in a single 160x100um tile.
 
 Expected video output:
-![](../docs/screenshot.png)
+![](docs/screenshot.png)
 
 
 - [Read the documentation for project](docs/info.md)
