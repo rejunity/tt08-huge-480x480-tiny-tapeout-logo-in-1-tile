@@ -109,7 +109,21 @@ module tt_um_rejunity_vga_logo (
   wire [9:0] x = pix_x;
   wire [9:0] y = pix_y;
   
-  wire [16:0] r = (x - 320) * (x - 320) + (y - 240) * (y - 240);
+  // wire [16:0] r = (x - 320) * (x - 320) + (y - 240) * (y - 240);
+
+  wire signed [9:0] sq_arg = ((x==0) ? (y - 240) : (x - 320));
+  wire [16:0] sq = sq_arg * sq_arg;
+  wire [16:0] r = sq + yy;
+
+  reg [16:0] yy;
+  always @(posedge clk) begin
+    if (~rst_n) begin
+      yy <= 0;
+    end else begin
+      if (x == 0)
+        yy <= sq;
+    end
+  end
 
   // reg [16:0] yy, r;
   // always @(posedge clk) begin
