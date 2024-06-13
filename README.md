@@ -2,7 +2,7 @@
 
 # Large procedural Tiny Tapeout logo (480x480) in Verilog
 
-Generates VGA signal of a large Tiny Tapeout logo using procedural approach. Fits in a single 160x100um tile.
+Generates VGA signal of a large Tiny Tapeout logo using procedural approach. Fits on a single 160x100um tile.
 
 Expected video output:
 ![](docs/screenshot.png)
