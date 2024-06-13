@@ -108,35 +108,44 @@ module tt_um_rejunity_vga_logo (
   // assume LOGO_SIZE = 480
   wire [9:0] x = pix_x;
   wire [9:0] y = pix_y;
-  
-  // wire [16:0] r = (x - 320) * (x - 320) + (y - 240) * (y - 240);
 
-  wire signed [9:0] sq_arg = ((x==0) ? (y - 240) : (x - 320));
-  wire [16:0] sq = sq_arg * sq_arg;
-  wire [16:0] r = sq + yy;
-
-  reg [16:0] yy;
+  // no multipliers - sequential only access
+  reg [16:0] r;
   always @(posedge clk) begin
     if (~rst_n) begin
-      yy <= 0;
+      r <= 0;
     end else begin
-      if (x == 0)
-        yy <= sq;
+      if (vsync) begin
+        r <= 320*320 + 240*240;
+      end
+      if (video_active & x == 0) begin
+        r <= r + 2*(y-240)+1 - 320*2;
+      end else if (video_active) begin
+        r <= r + 2*(x-320)+1;
+      end
     end
   end
+  
 
-  // reg [16:0] yy, r;
+  // 1 multiplier - sequential only access
+  // wire signed [9:0] sq_arg = ((x==0) ? (y - 240) : (x - 320));
+  // wire [16:0] sq = sq_arg * sq_arg;
+  // wire [16:0] r = sq + yy;
+
+  // reg [16:0] yy;
   // always @(posedge clk) begin
   //   if (~rst_n) begin
   //     yy <= 0;
-  //     r <= 0;
   //   end else begin
-  //     if (x==0)
-  //       yy <= (y - 10'd240) * (y - 10'd240);
-  //     else
-  //       r <= (x - 10'd320) * (x - 10'd320) + yy;
+  //     if (x == 0)
+  //       yy <= sq;
   //   end
   // end
+
+
+  // 2 multipliers - random access
+  // wire [16:0] r = (x - 320) * (x - 320) + (y - 240) * (y - 240);
+
 
   wire ring = r < 240*240 & r > (240-36)*(240-36);
 
