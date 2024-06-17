@@ -4,12 +4,12 @@ project:
   title:        "480x480 Tiny Tapeout logo in 1 tile"      # Project title
   author:       "Renaldas Zioma"
   discord:      "rzioma"      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "Large 480x480 pixels Tiny Tapeout logo crammed into a 1 tile"
+  description:  "Large 480x480 pixels Tiny Tapeout logo crammed into 1 tile"
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     25175000       # Clock frequency in Hz (or 0 if not applicable)
 
   # How many tiles your design occupies? A single tile is about 167x108 uM.
-  tiles: "1x2"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
+  tiles: "1x1"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
   top_module:  "tt_um_rejunity_vga_logo"
