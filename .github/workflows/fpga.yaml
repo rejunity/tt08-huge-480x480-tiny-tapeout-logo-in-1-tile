@@ -2,11 +2,13 @@ name: fpga
 
 on:
   push:
+    # Comment out (or remove) the following line to run the FPGA workflow on every push:
+    branches: none
   workflow_dispatch:
 
 jobs:
   fpga:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: checkout repo
         uses: actions/checkout@v4
@@ -14,4 +16,4 @@ jobs:
           submodules: recursive
 
       - name: FPGA bitstream for TT ASIC Sim (ICE40UP5K)
-        uses: TinyTapeout/tt-gds-action/fpga/ice40up5k@tt08
+        uses: TinyTapeout/tt-gds-action/fpga/ice40up5k@tt09
