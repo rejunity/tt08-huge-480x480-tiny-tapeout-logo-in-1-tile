@@ -7,22 +7,29 @@
 
 `default_nettype none
 
+`define VGA_REGISTERED_OUTPUTS
+
 parameter LOGO_SIZE = 480;  // Size of the logo in pixels
 parameter DISPLAY_WIDTH = 640;  // VGA display width
 parameter DISPLAY_HEIGHT = 480;  // VGA display height
 
-
 module gradient(
   input wire clk,
+  input wire reset,
   output wire [10:0] value
 );
   reg [10:0] acc;
   reg [19:0] lfsr; 
-  wire feedback = lfsr[19] ^ lfsr[15] ^ lfsr[11] ^ lfsr[5] ^ lfsr[4] ^ lfsr[3] + 1;
+  wire feedback = lfsr[19] ^ lfsr[15] ^ lfsr[11] ^ lfsr[5] ^ lfsr[4] ^ lfsr[3] ^ 1'b1;
 
   always @(posedge clk) begin
-    acc <= acc + lfsr[7:0];
-    lfsr <= {lfsr[18:0], feedback};
+    if (reset) begin
+      acc <= 0;
+      lfsr <= 0;
+    end else begin
+      acc <= acc + lfsr[7:0];
+      lfsr <= {lfsr[18:0], feedback};
+    end
   end
   assign value = acc;
 endmodule
@@ -42,9 +49,9 @@ module tt_um_rejunity_vga_logo (
 
   wire [9:0] x = pix_x;
   wire [9:0] y = pix_y;
-  wire[10:0] xx = pix_x + pix_y/4 - counter*LIGHT_SPEED;
+  wire [10:0] xx = pix_x + pix_y/4 - counter*LIGHT_SPEED;
   //wire[10:0] xxS = pix_x + pix_y/4 - counter*LIGHT_SPEED;
-  wire[10:0] xx2 = pix_x + pix_y/4;
+  wire[ 10:0] xx2 = pix_x + pix_y/4;
 
   // reg [7:0] acc;
   // reg line;
@@ -160,7 +167,7 @@ module tt_um_rejunity_vga_logo (
   wire [10:0] grad_value;
   // wire line = grad_value[7:0] < y; 
   // wire [5:0] fg = 6'b11_11_01;
-  wire [5:0] fgc = grad_value[8:0] < (xx2-120) ? 6'b01_00_01 : 6'b10_00_10;
+  wire [5:0] fgc = (grad_value[8:0] < (xx2-120)) ? 6'b01_00_01 : 6'b10_00_10;
     // grad_value[8:0] > xxS[8:0] ? logo2_colors[xxS[10:9]] : logo2_colors[xxS[10:9]+1];
   wire [5:0] fgl = 
     // counter[4:0]*SPEC_SPEED > xx2+6*SPEC_SPEED & counter[4:0]*SPEC_SPEED <= xx2+8*SPEC_SPEED ? 6'b11_11_00:
@@ -172,17 +179,20 @@ module tt_um_rejunity_vga_logo (
     counter[COUNTER_DIV:0]*LIGHT_SPEED*SPEC_SPEED > xx2+180*SPEC_SPEED*SPEC_SPEED &
     counter[COUNTER_DIV:0]*LIGHT_SPEED*SPEC_SPEED <= xx2+230*SPEC_SPEED*SPEC_SPEED ? BLING:
     // 0;
-     grad_value[6:0] > xx[6:0] ? logo_colors[xx[10:7]] : logo_colors[xx[10:7]+1];
+     (grad_value[6:0] > xx[6:0]) ? logo_colors[xx[10:7]] : logo_colors[xx[10:7]+1];
   wire [5:0] fg = fgc | fgl;
 
   wire [5:0] bg = 
-    grad_value[6:0] > y[6:0] ? grad_colors[y[8:7]] : grad_colors[y[8:7]+1];
+    (grad_value[6:0] > y[6:0]) ? grad_colors[y[8:7]] : grad_colors[y[8:7]+1];
     // grad1_value[7:0] > y       & y < 256 ? 6'b10_00_11 : //6'b11_00_10;
     // grad2_value[7:0] > (y-256) & y > 256 ? 6'b11_00_10 : 6'b10_00_01;
       // grad1_value[7:0] > y        ? 6'b11_11_11 : //6'b00_00_00 
       // grad2_value[7:0] > (y-255)  & y < 400 ? 6'b00_00_00 : 6'b00_00_11;
 
-  gradient grad1(.clk(clk), .value(grad_value));
+  gradient grad1(
+    .clk(clk),
+    .reset(~rst_n),
+    .value(grad_value));
 
   // no multipliers - sequential only access
   reg [16:0] r;
@@ -267,7 +277,7 @@ module tt_um_rejunity_vga_logo (
   // end
 
   // wire ring = (rx+ry) < 240*240 & (rx+ry) > (240-36)*(240-36);
-  wire ring = r < 240*240 & r > (240-36)*(240-36);
+  wire ring = r < 238*238 & r > (238-36)*(238-36);
 
   // xy: 46x100 wh:240x64
   wire hat0 = x >= 80+46  & x < 80+46+240  & y >= 100 & y < 100+64;
@@ -288,8 +298,10 @@ module tt_um_rejunity_vga_logo (
   // wire bg = line;
 
   wire logo = (ring&cut0&cut1)|hat0|leg0|hat1|leg1;
-  // assign {R, G, B } = (video_active&logo) ? 6'b11_11_00 : (bg ? 6'b10_00_11 : 6'b11_00_10) ;//6'b00_00_00;
-  assign {R, G, B } = (video_active&logo) ? fg : bg ;//6'b00_00_00;
+  assign {R, G, B} = 
+    ~video_active ? 0 :
+             // logo ? 6'b00_00_00 : 6'b11_11_11;
+                logo ? fg : bg;
 
 
   // VGA signals
@@ -303,7 +315,14 @@ module tt_um_rejunity_vga_logo (
   wire [9:0] pix_y;
 
   // TinyVGA PMOD
+`ifdef VGA_REGISTERED_OUTPUTS
+  reg [7:0] UO_OUT;
+  always @(posedge clk)
+    UO_OUT <= {hsync, B[0], G[0], R[0], vsync, B[1], G[1], R[1]};
+  assign uo_out = UO_OUT;
+`else
   assign uo_out = {hsync, B[0], G[0], R[0], vsync, B[1], G[1], R[1]};
+`endif
 
   // Unused outputs assigned to 0.
   assign uio_out = 0;
