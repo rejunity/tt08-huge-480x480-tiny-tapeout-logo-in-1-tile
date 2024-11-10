@@ -351,12 +351,13 @@ module tt_um_rejunity_vga_logo (
   // assign G = video_active ? {moving_x[6], pix_y[2]} : 2'b00;
   // assign B = video_active ? {moving_x[7], pix_y[5]} : 2'b00;
   
-  always @(posedge vsync) begin
+  reg vsync_prev; always @(posedge clk) vsync_prev <= vsync;
+
+  always @(posedge clk) begin
     if (~rst_n) begin
       counter2 <= 0;
-    end else begin
+    end else if (vsync_prev != vsync && vsync)
       counter2 <= counter2 + 1;
-    end
   end
   
 endmodule
